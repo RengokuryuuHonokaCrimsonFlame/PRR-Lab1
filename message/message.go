@@ -14,3 +14,7 @@ type Message struct{
 func (m Message) String() string{
 	return fmt.Sprintf("<%v, %v , %v>", m.Genre, m.Id, m.Temps)
 }
+
+func (m Message) SimpleString() string{
+	return fmt.Sprintf("<%v, %v>", m.Genre, m.Id)
+}

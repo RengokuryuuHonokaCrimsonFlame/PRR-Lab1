@@ -41,11 +41,18 @@ func multicastSender() {
 	var id uint8
 	id = 0
 	for{
-		mess := message.Message{
+		sync := message.Message{
 			Genre:	SYNC,
 			Id:		id,
 		}
-		sendMessage(mess, conn)
+		tmaster := time.Now()
+		sendMessage(sync.SimpleString(), conn)
+		follow_up := message.Message{
+			Genre:  FOLLOW_UP,
+			Id:    id,
+			Temps: tmaster,
+		}
+		sendMessage(follow_up.String(), conn)
 		id++
 		time.Sleep(10 * time.Second)
 	}
@@ -84,8 +91,8 @@ func clientReader() {
 	}
 }
 
-func sendMessage(mess message.Message, conn io.Writer){
-	conn.Write([]byte(mess.String()))
+func sendMessage(message string, conn io.Writer){
+	conn.Write([]byte(message))
 }
 
 // fin, OMIT
