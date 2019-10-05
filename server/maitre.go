@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
+	"golang.org/x/net/ipv4"
 	"io"
 	"log"
 	"net"
 	"os"
 	"runtime"
-
-	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
-	"golang.org/x/net/ipv4"
+	"time"
 )
 
 // debut, OMIT
@@ -23,7 +23,6 @@ const DELAY_REQUEST = 2
 const DELAY_RESPONSE = 3
 
 func main() {
-	go clientReader()
 	go multicastSender()
 	conn, err := net.Dial("udp", multicastAddr)
 	if err != nil {
@@ -47,6 +46,8 @@ func multicastSender() {
 			Id:		id,
 		}
 		sendMessage(mess, conn)
+		id++
+		time.Sleep(10 * time.Second)
 	}
 }
 

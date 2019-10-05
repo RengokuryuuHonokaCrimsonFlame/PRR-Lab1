@@ -7,7 +7,7 @@ import (
 
 type Message struct{
 	Genre uint8
-	Id uint8
+	Id 	  uint8
 	Temps time.Time
 }
 
