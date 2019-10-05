@@ -3,6 +3,7 @@ package Server
 import (
 	"bufio"
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"golang.org/x/net/ipv4"
 	"io"
@@ -13,11 +14,13 @@ import (
 	"time"
 
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/Client"
 
 )
 
 // debut, OMIT
 const multicastAddr = "224.0.0.1:6666"
+
 const SYNC = 0;
 const FOLLOW_UP = 1;
 const DELAY_REQUEST = 2;
@@ -74,16 +77,47 @@ func syncSender(){
 	if err != nil {
 		log.Fatal(err)
 	}
-	id := 0
+	var id uint8
 	defer conn.Close()
 	for{
 		mess := message.Message{
-			genre :     SYNC,
-			idMessage : id,
-			temps : time.Now(),
+			SYNC,id, nil,
 		}
+		broadcast(mess)
 	}
 }
+
+func broadcast(send chan message.Message) {
+	fmt.Printf("COMM: Broadcasting message to: %s%s\n")
+	broadcastAddress, err := net.ResolveUDPAddr("udp", multicastAddr)
+	printError("ResolvingUDPAddr in Broadcast failed.", err)
+	localAddress, err := net.ResolveUDPAddr("udp", GetLocalIP())
+	connection, err := net.DialUDP("udp", localAddress, broadcastAddress)
+	printError("DialUDP in Broadcast failed.", err)
+	defer connection.Close()
+
+	var buffer bytes.Buffer
+	encoder := gob.NewEncoder(&buffer)
+	for {
+		message := <-send
+		err := encoder.Encode(message)
+		printError("Encode error in broadcast: ", err)
+		_, err = connection.Write(buffer.Bytes())
+		if err != nil {
+			_, err = lConnection.Write(buffer.Bytes())
+			printError("Write in broadcast localhost failed", err)
+		}
+		buffer.Reset()
+	}
+}
+
+func printError(erreur string, errorType error) {
+	if errorType != nil {
+		fmt.Println(erreur)
+		fmt.Println(errorType.Error())
+	}
+}
+
 
 // fin, OMIT
 func mustCopy(dst io.Writer, src io.Reader) {
