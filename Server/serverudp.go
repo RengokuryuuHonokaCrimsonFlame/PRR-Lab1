@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
+
 )
 
 // debut, OMIT
@@ -75,9 +77,10 @@ func syncSender(){
 	id := 0
 	defer conn.Close()
 	for{
-		mess = message.Message{
-			genre:     SYNC
-			idMessage: id
+		mess := message.Message{
+			genre :     SYNC,
+			idMessage : id,
+			temps : time.Now(),
 		}
 	}
 }

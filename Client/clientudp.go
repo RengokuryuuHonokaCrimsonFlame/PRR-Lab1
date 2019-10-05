@@ -9,6 +9,7 @@ import (
 
 // debut, OMIT
 const srvAddr = "127.0.0.1:6000"
+const multicastAddr = "224.0.0.1:6666"
 
 func main() {
 	conn, err := net.Dial("udp", srvAddr)
@@ -17,12 +18,12 @@ func main() {
 	}
 	defer conn.Close()
 	go func() {
-		mustCopyClientSide(os.Stdout, conn)
+		mustCopy(os.Stdout, conn)
 	}()
-	mustCopyClientSide(conn, os.Stdin) // CTRL-D pour sortir
+	mustCopy(conn, os.Stdin) // CTRL-D pour sortir
 }
 
-func mustCopyClientSide(dst io.Writer, src io.Reader) {
+func mustCopy(dst io.Writer, src io.Reader) {
 	if _, err := io.Copy(dst, src); err != nil {
 		log.Fatal(err)
 	}
