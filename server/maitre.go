@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	_ "github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
 	"golang.org/x/net/ipv4"
 	"io"
@@ -19,7 +19,7 @@ import (
 
 func main() {
 	go multicastSender()
-	conn, err := net.Dial("udp", multicastAddr)
+	conn, err := net.Dial("udp", MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func main() {
 }
 
 func multicastSender() {
-	conn, err := net.Dial("udp", multicastAddr) // listen on port
+	conn, err := net.Dial("udp", MulticastAddr) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
