@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
 	"golang.org/x/net/ipv4"
 	"io"
 	"log"
@@ -18,7 +19,7 @@ import (
 
 func main() {
 	go multicastSender()
-	conn, err := net.Dial("udp", MulticastAddr)
+	conn, err := net.Dial("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
