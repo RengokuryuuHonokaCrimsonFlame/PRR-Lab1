@@ -27,11 +27,12 @@ func CreateMessage(s string) *Message{
 
 	id, _ := strconv.ParseUint(decompose[1], 10, 8)
 
-	layout := "2006-01-02T15:04:05.000Z"
-	t, err := time.Parse(layout, decompose[2])
-	if err != nil && len(decompose) > 2{
-		fmt.Println(err)
+	t := time.Now()
+	if len(decompose) > 2 {
+		layout := "2006-01-02T15:04:05.000Z"
+		t, _ = time.Parse(layout, decompose[2])
 	}
+
 	mess := Message{
 		Genre: uint8(genre),
 		Id: uint8(id),

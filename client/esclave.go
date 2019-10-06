@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
 	"io"
 	"log"
 	"net"
@@ -57,8 +58,9 @@ func udpReader() {
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
-			mess := message.Creates.Text()
+			//fmt.Printf("%s from %v\n", s.Text(), addr)
+			mess := message.CreateMessage(s.Text())
+			fmt.Print( "%s receved from %v\n", mess, addr)
 		}
 	}
 }
