@@ -4,20 +4,24 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
 	"io"
 	"log"
 	"net"
 	"os"
 	"runtime"
 
-	"golang.org/x/net/ipv4")
+	"golang.org/x/net/ipv4"
+
+	_ "github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
+	_ "github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
+)
 
 // debut, OMIT
-const multicastAddr = "224.0.0.1:6666"
 
 func main() {
 	go udpReader()
-	conn, err := net.Dial("udp", multicastAddr)
+	conn, err := net.Dial("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,13 +31,13 @@ func main() {
 
 // milieu, OMIT
 func udpReader() {
-	conn, err := net.ListenPacket("udp", multicastAddr) // listen on port
+	conn, err := net.ListenPacket("udp", constantes.MulticastAddr) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 	p := ipv4.NewPacketConn(conn) // convert to ipv4 packetConn
-	addr, err := net.ResolveUDPAddr("udp", multicastAddr)
+	addr, err := net.ResolveUDPAddr("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,6 +58,7 @@ func udpReader() {
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
 			fmt.Printf("%s from %v\n", s.Text(), addr)
+			mess := message.Creates.Text()
 		}
 	}
 }

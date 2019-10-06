@@ -28,7 +28,7 @@ func main() {
 }
 
 func multicastSender() {
-	conn, err := net.Dial("udp", MulticastAddr) // listen on port
+	conn, err := net.Dial("udp", constantes.MulticastAddr) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,13 +37,13 @@ func multicastSender() {
 	id = 0
 	for{
 		sync := message.Message{
-			Genre:	SYNC,
+			Genre:	constantes.SYNC,
 			Id:		id,
 		}
 		tmaster := time.Now()
 		sendMessage(sync.SimpleString(), conn)
 		follow_up := message.Message{
-			Genre:  FOLLOW_UP,
+			Genre:  constantes.FOLLOW_UP,
 			Id:    id,
 			Temps: tmaster,
 		}
@@ -55,13 +55,13 @@ func multicastSender() {
 
 // milieu, OMIT
 func clientReader() {
-	conn, err := net.ListenPacket("udp", multicastAddr) // listen on port
+	conn, err := net.ListenPacket("udp", constantes.MulticastAddr) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 	p := ipv4.NewPacketConn(conn) // convert to ipv4 packetConn
-	addr, err := net.ResolveUDPAddr("udp", multicastAddr)
+	addr, err := net.ResolveUDPAddr("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
