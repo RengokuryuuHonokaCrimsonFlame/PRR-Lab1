@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	_ "github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
 	"golang.org/x/net/ipv4"
 	"io"
