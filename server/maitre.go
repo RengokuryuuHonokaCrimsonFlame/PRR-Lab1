@@ -15,12 +15,6 @@ import (
 )
 
 // debut, OMIT
-const multicastAddr = "224.0.0.1:6666"
-
-const SYNC = 0
-const FOLLOW_UP = 1
-const DELAY_REQUEST = 2
-const DELAY_RESPONSE = 3
 
 func main() {
 	go multicastSender()
