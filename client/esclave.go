@@ -58,9 +58,9 @@ func udpReader() {
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			//fmt.Printf("%s from %v\n", s.Text(), addr)
+			fmt.Printf("%s from %v\n", s.Text(), addr)
 			mess := message.CreateMessage(s.Text())
-			fmt.Print( "%s receved from %v\n", mess, addr)
+			fmt.Printf( "%s receved from %v\n", mess, addr)
 		}
 	}
 }

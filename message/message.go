@@ -29,7 +29,7 @@ func CreateMessage(s string) *Message{
 
 	t := time.Now()
 	if len(decompose) > 2 {
-		layout := "2006-01-02T15:04:05.000Z"
+		layout := "2019-10-06 14:30:26.7181414 +0200 CEST m=+5.009124801"
 		t, _ = time.Parse(layout, decompose[2])
 	}
 
