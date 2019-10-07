@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"runtime"
+	"time"
 
 	"golang.org/x/net/ipv4"
 
@@ -19,6 +20,10 @@ import (
 )
 
 // debut, OMIT
+
+var syncId uint8
+var localTime time.Time
+var ecart int64
 
 func main() {
 	go udpReader()
@@ -31,6 +36,7 @@ func main() {
 }
 
 // milieu, OMIT
+//On écoute sur l'adresse multicast
 func udpReader() {
 	conn, err := net.ListenPacket("udp", constantes.MulticastAddr) // listen on port
 	if err != nil {
@@ -61,8 +67,26 @@ func udpReader() {
 			fmt.Printf("%s from %v\n", s.Text(), addr)
 			mess := message.CreateMessage(s.Text())
 			fmt.Printf( "%s receved from %v\n", mess, addr)
+			switch mess.Genre {
+				case constantes.SYNC:{
+					syncId = mess.Id
+					localTime = time.Now()
+				}
+				case constantes.FOLLOW_UP:{
+					ecart = mess.Temps.Sub(localTime).Nanoseconds()
+					go sendDelayRequest(addr.String())
+				}
+				default:{
+					fmt.Printf("Unknown operation has been received.")
+				}
+			}
 		}
 	}
+}
+
+//On envoie une réponse au serveur
+func sendDelayRequest(addr string){
+	conn, err := net.Dial("udp", addr)
 }
 
 // fin, OMIT
