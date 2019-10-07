@@ -41,13 +41,13 @@ func multicastSender() {
 			Id:		id,
 		}
 		tmaster := time.Now()
-		sendMessage(sync.SimpleString(), conn)
+		message.SendMessage(sync.SimpleString(), conn)
 		follow_up := message.Message{
 			Genre:  constantes.FOLLOW_UP,
 			Id:    id,
 			Temps: tmaster,
 		}
-		sendMessage(follow_up.String(), conn)
+		message.SendMessage(follow_up.String(), conn)
 		id++
 		time.Sleep(10 * time.Second)
 	}
@@ -86,9 +86,6 @@ func clientReader() {
 	}
 }
 
-func sendMessage(message string, conn io.Writer){
-	conn.Write([]byte(message))
-}
 
 // fin, OMIT
 func mustCopy(dst io.Writer, src io.Reader) {

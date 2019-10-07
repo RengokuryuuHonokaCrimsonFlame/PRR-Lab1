@@ -22,7 +22,6 @@ import (
 // debut, OMIT
 
 var syncId uint8
-var localTime time.Time
 var ecart int64
 
 func main() {
@@ -70,10 +69,9 @@ func udpReader() {
 			switch mess.Genre {
 				case constantes.SYNC:{
 					syncId = mess.Id
-					localTime = time.Now()
 				}
 				case constantes.FOLLOW_UP:{
-					ecart = mess.Temps.Sub(localTime).Nanoseconds()
+					ecart = mess.Temps.Sub(time. Now()).Nanoseconds()
 					go sendDelayRequest(addr.String())
 				}
 				default:{
@@ -86,7 +84,15 @@ func udpReader() {
 
 //On envoie une réponse au serveur
 func sendDelayRequest(addr string){
-	conn, err := net.Dial("udp", addr)
+	conn, err := net.Dial("udp", addr + constantes.ListeningPort)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	mess := message.Message{
+		Genre: constantes.DELAY_REQUEST,
+		Id:    syncId,
+	}
 }
 
 // fin, OMIT
