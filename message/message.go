@@ -33,7 +33,7 @@ func CreateMessage(s string) *Message{
 
 	t := time.Now().UnixNano()
 	if len(decompose) > 2 {
-		t, _ = strconv.ParseInt(decompose[1], 10, 64)
+		t, _ = strconv.ParseInt(decompose[2], 10, 64)
 	}
 
 	mess := Message{

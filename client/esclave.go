@@ -72,6 +72,8 @@ func udpReader() {
 					syncId = mess.Id
 				}
 				case constantes.FOLLOW_UP:{
+					fmt.Printf( "Maitre %d\n", mess.Temps)
+					fmt.Printf( "Esclave %d\n", time.Now().UnixNano())
 					ecart = mess.Temps - time.Now().UnixNano()
 					fmt.Printf( "FOLLOW_UP écart de %d\n", ecart)
 					go sendDelayRequest(addr.String())
