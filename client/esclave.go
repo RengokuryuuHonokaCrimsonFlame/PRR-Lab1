@@ -74,7 +74,7 @@ func udpReader() {
 				}
 				case constantes.FOLLOW_UP:{
 					fmt.Printf( "FOLLOW_UP")
-					ecart = mess.Temps - uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
+					ecart = mess.Temps - int64(time.Now().UnixNano()) / int64(time.Millisecond)
 					go sendDelayRequest(addr.String())
 				}
 				default:{
