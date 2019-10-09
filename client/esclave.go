@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"golang.org/x/net/ipv4"
@@ -68,10 +69,12 @@ func udpReader() {
 			fmt.Printf( "%s receved from %v\n", mess, addr)
 			switch mess.Genre {
 				case constantes.SYNC:{
+					fmt.Printf( "SYNC")
 					syncId = mess.Id
 				}
 				case constantes.FOLLOW_UP:{
-					ecart = mess.Temps.Sub(time. Now()).Nanoseconds()
+					fmt.Printf( "FOLLOW_UP")
+					ecart = mess.Temps - uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
 					go sendDelayRequest(addr.String())
 				}
 				default:{
@@ -84,7 +87,7 @@ func udpReader() {
 
 //On envoie une réponse au serveur
 func sendDelayRequest(addr string){
-	conn, err := net.Dial("udp", addr + constantes.ListeningPort)
+	conn, err := net.Dial("udp", strings.Split(addr, ":")[0] + constantes.ListeningPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,6 +96,7 @@ func sendDelayRequest(addr string){
 		Genre: constantes.DELAY_REQUEST,
 		Id:    syncId,
 	}
+	message.SendMessage(mess.SimpleString(), conn)
 }
 
 // fin, OMIT

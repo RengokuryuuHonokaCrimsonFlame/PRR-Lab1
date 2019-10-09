@@ -11,7 +11,7 @@ import (
 type Message struct{
 	Genre uint8
 	Id 	  uint8
-	Temps time.Time
+	Temps uint64
 }
 
 //Envoie un message
@@ -31,10 +31,9 @@ func CreateMessage(s string) *Message{
 
 	id, _ := strconv.ParseUint(decompose[1], 10, 8)
 
-	t := time.Now()
+	t := uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
 	if len(decompose) > 2 {
-		layout := "2019-10-06 14:30:26.7181414 +0200 CEST m=+5.009124801"
-		t, _ = time.Parse(layout, decompose[2])
+		t, _ = strconv.ParseUint(decompose[1], 10, 64)
 	}
 
 	mess := Message{
