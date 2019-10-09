@@ -31,7 +31,7 @@ func CreateMessage(s string) *Message{
 
 	id, _ := strconv.ParseUint(decompose[1], 10, 8)
 
-	t := int64(time.Now().UnixNano()) / int64(time.Nanosecond)
+	t := time.Now().UnixNano()
 	if len(decompose) > 2 {
 		t, _ = strconv.ParseInt(decompose[1], 10, 64)
 	}
