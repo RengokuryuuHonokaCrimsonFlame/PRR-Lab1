@@ -23,7 +23,9 @@ import (
 // debut, OMIT
 
 var syncId uint8
+var delayId uint8
 var ecart int64
+var addrServer string = ""
 
 func main() {
 	go udpReader()
@@ -48,6 +50,10 @@ func udpReader() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if addrServer != addr.String(){
+		addrServer = addr.String()
+		go sendDelayRequest(addr.String())
+	}
 	var interf *net.Interface
 	if runtime.GOOS == "darwin" {
 		interf, _ = net.InterfaceByName("en0")
@@ -68,15 +74,16 @@ func udpReader() {
 			fmt.Printf( "%s received from %v\n", mess, addr)
 			switch mess.Genre {
 				case constantes.SYNC:{
-					fmt.Printf( "SYNC\n")
-					syncId = mess.Id
+					if mess.Id < syncId{
+						fmt.Printf( "SYNC ancien à ignorer\n")
+					}else{
+						fmt.Printf( "SYNC\n")
+						syncId = mess.Id
+					}
 				}
 				case constantes.FOLLOW_UP:{
-					fmt.Printf( "Maitre %d\n", mess.Temps)
-					fmt.Printf( "Esclave %d\n", time.Now().UnixNano())
-					ecart = mess.Temps - time.Now().UnixNano()
-					fmt.Printf( "FOLLOW_UP écart de %d\n", ecart)
-					go sendDelayRequest(addr.String())
+					ecart = time.Now().UnixNano() - mess.Temps
+					fmt.Printf( "FOLLOW_UP écart de %d nano secondes\n", ecart)
 				}
 				default:{
 					fmt.Printf("Unknown operation has been received.")
@@ -88,16 +95,20 @@ func udpReader() {
 
 //On envoie une réponse au serveur
 func sendDelayRequest(addr string){
-	conn, err := net.Dial("udp", strings.Split(addr, ":")[0] + constantes.ListeningPort)
-	if err != nil {
-		log.Fatal(err)
+	for addrServer == addr {
+		time.Sleep(10 * time.Second)
+		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningPort)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer conn.Close()
+		mess := message.Message{
+			Genre: constantes.DELAY_REQUEST,
+			Id:    syncId,
+		}
+		fmt.Println("Send DELAY_REQUEST")
+		message.SendMessage(mess.SimpleString(), conn)
 	}
-	defer conn.Close()
-	mess := message.Message{
-		Genre: constantes.DELAY_REQUEST,
-		Id:    syncId,
-	}
-	message.SendMessage(mess.SimpleString(), conn)
 }
 
 // fin, OMIT

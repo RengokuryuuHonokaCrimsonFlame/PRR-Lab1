@@ -52,7 +52,7 @@ func multicastSender() {
 		}
 		message.SendMessage(follow_up.String(), conn)
 		id++
-		time.Sleep(10 * time.Second)
+		time.Sleep(constantes * time.Second)
 	}
 }
 
@@ -83,8 +83,13 @@ func selfListener() {
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
+			mess := message.CreateMessage(s.Text())
+			fmt.Printf("%s received from %v\n", s.Text(), addr)
+			switch mess.Genre {
+				case constantes.DELAY_REQUEST:{
 
+				}
+			}
 		}
 	}
 }
