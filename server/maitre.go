@@ -52,7 +52,7 @@ func multicastSender() {
 		}
 		message.SendMessage(follow_up.String(), conn)
 		id++
-		time.Sleep(constantes * time.Second)
+		time.Sleep(constantes.AttenteK * time.Second)
 	}
 }
 
