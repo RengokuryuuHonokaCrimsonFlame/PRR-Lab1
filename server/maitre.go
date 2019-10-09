@@ -43,7 +43,7 @@ func multicastSender() {
 			Genre: constantes.SYNC,
 			Id:    id,
 		}
-		tmaster := time.Now().UnixNano() / int64(time.Millisecond)
+		tmaster := time.Now().UnixNano() / int64(time.Nanosecond)
 		message.SendMessage(sync.SimpleString(), conn)
 		follow_up := message.Message{
 			Genre: constantes.FOLLOW_UP,

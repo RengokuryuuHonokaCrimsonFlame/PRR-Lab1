@@ -64,17 +64,16 @@ func udpReader() {
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
 			mess := message.CreateMessage(s.Text())
-			fmt.Printf( "%s receved from %v\n", mess, addr)
+			fmt.Printf( "%s received from %v\n", mess, addr)
 			switch mess.Genre {
 				case constantes.SYNC:{
-					fmt.Printf( "SYNC")
+					fmt.Printf( "SYNC\n")
 					syncId = mess.Id
 				}
 				case constantes.FOLLOW_UP:{
-					fmt.Printf( "FOLLOW_UP")
-					ecart = mess.Temps - int64(time.Now().UnixNano()) / int64(time.Millisecond)
+					ecart = mess.Temps - int64(time.Now().UnixNano()) / int64(time.Nanosecond)
+					fmt.Printf( "FOLLOW_UP écart de %d\n", ecart)
 					go sendDelayRequest(addr.String())
 				}
 				default:{
