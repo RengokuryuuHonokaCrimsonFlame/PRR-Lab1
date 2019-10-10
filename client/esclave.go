@@ -8,6 +8,7 @@ import (
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"runtime"
@@ -96,7 +97,8 @@ func udpReader() {
 //On envoie une réponse au serveur
 func sendDelayRequest(addr string){
 	for addrServer == addr {
-		time.Sleep(10 * time.Second)
+		rand.Seed(time.Now().UnixNano())
+		time.Sleep(rand.Intn((60 * constantes.AttenteK - 4 * constantes.AttenteK + 1) +  4 * constantes.AttenteK ) * time.Second)
 		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningPort)
 		if err != nil {
 			log.Fatal(err)
