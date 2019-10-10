@@ -14,11 +14,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
 	"golang.org/x/net/ipv4"
-
-	_ "github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
-	_ "github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
 )
 
 // debut, OMIT
@@ -98,7 +94,8 @@ func udpReader() {
 func sendDelayRequest(addr string){
 	for addrServer == addr {
 		rand.Seed(time.Now().UnixNano())
-		time.Sleep(rand.Intn((60 * constantes.AttenteK - 4 * constantes.AttenteK + 1) +  4 * constantes.AttenteK ) * time.Second)
+		r := rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min
+		time.Sleep(  * time.Second)
 		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningPort)
 		if err != nil {
 			log.Fatal(err)
