@@ -94,7 +94,7 @@ func udpReader() {
 func sendDelayRequest(addr string){
 	for addrServer == addr {
 		rand.Seed(time.Now().UnixNano())
-		r := rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min
+		r := rand.In(constantes.Max - constantes.Min + 1) +  constantes.Min
 		time.Sleep(  * time.Second)
 		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningPort)
 		if err != nil {
