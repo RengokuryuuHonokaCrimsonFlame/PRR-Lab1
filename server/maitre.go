@@ -59,7 +59,7 @@ func multicastSender() {
 }
 
 func selfListener() {
-	conn, err := net.ListenPacket("udp", constantes.ListeningPort)
+	conn, err := net.ListenPacket("udp", constantes.ListeningServerPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func delayResponseSender(id uint8, addr string){
 		Id:    id,
 		Temps:  time.Now().UnixNano(),
 	}
-	conn, err := net.Dial("udp", strings.Split(addr, ":")[0] + ":6668") // listen on port
+	conn, err := net.Dial("udp", strings.Split(addr, ":")[0] + constantes.ListeningClientPort) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}

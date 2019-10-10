@@ -99,7 +99,7 @@ func delayRequestSender(addr string){
 		rand.Seed(time.Now().UnixNano())
 		r := constantes.Min//rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min
 		time.Sleep(time.Duration(r) * time.Second)
-		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningPort)
+		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningServerPort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -116,7 +116,7 @@ func delayRequestSender(addr string){
 }
 
 func delayResponceReceiver(){
-	conn, err := net.ListenPacket("udp", ":6668") // listen on port
+	conn, err := net.ListenPacket("udp", constantes.ListeningClientPort) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
