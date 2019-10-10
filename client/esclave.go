@@ -19,13 +19,16 @@ import (
 
 // debut, OMIT
 
-var syncId uint8
-var delayId uint8
-var ecart int64
+var syncId uint8 = 0
+var ecart int64 = 0
 var addrServer string = ""
+var delayId uint8 = 0
+var delay int64 = 0
+var tes = make(chan int64)
 
 func main() {
 	go udpReader()
+	go delayResponceReceiver()
 	conn, err := net.Dial("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
@@ -47,10 +50,6 @@ func udpReader() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if addrServer != addr.String(){
-		addrServer = addr.String()
-		go sendDelayRequest(addr.String())
-	}
 	var interf *net.Interface
 	if runtime.GOOS == "darwin" {
 		interf, _ = net.InterfaceByName("en0")
@@ -69,21 +68,25 @@ func udpReader() {
 		for s.Scan() {
 			mess := message.CreateMessage(s.Text())
 			fmt.Printf( "%s received from %v\n", mess, addr)
-			switch mess.Genre {
+			if mess.Id < syncId {
+				fmt.Printf( "Ancien message reçu.\n")
+			}else{
+				switch mess.Genre {
 				case constantes.SYNC:{
-					if mess.Id < syncId{
-						fmt.Printf( "SYNC ancien à ignorer\n")
-					}else{
-						fmt.Printf( "SYNC\n")
+						fmt.Printf("SYNC\n")
 						syncId = mess.Id
+						if addrServer != addr.String(){
+							addrServer = addr.String()
+							go delayRequestSender(addr.String())
+						}
 					}
-				}
-				case constantes.FOLLOW_UP:{
-					ecart = time.Now().UnixNano() - mess.Temps
-					fmt.Printf( "FOLLOW_UP écart de %d nano secondes\n", ecart)
-				}
-				default:{
-					fmt.Printf("Unknown operation has been received.")
+					case constantes.FOLLOW_UP:{
+						ecart = time.Now().UnixNano() - mess.Temps
+						fmt.Printf("FOLLOW_UP écart de %d nano secondes\n", ecart)
+					}
+					default:{
+						fmt.Printf("Unknown operation has been received.")
+					}
 				}
 			}
 		}
@@ -91,11 +94,11 @@ func udpReader() {
 }
 
 //On envoie une réponse au serveur
-func sendDelayRequest(addr string){
+func delayRequestSender(addr string){
 	for addrServer == addr {
 		rand.Seed(time.Now().UnixNano())
-		r := rand.In(constantes.Max - constantes.Min + 1) +  constantes.Min
-		time.Sleep(  * time.Second)
+		r := constantes.Min//rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min
+		time.Sleep(time.Duration(r) * time.Second)
 		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningPort)
 		if err != nil {
 			log.Fatal(err)
@@ -103,10 +106,43 @@ func sendDelayRequest(addr string){
 		defer conn.Close()
 		mess := message.Message{
 			Genre: constantes.DELAY_REQUEST,
-			Id:    syncId,
+			Id:    delayId,
 		}
-		fmt.Println("Send DELAY_REQUEST")
+		fmt.Println("Send DELAY_REQUEST\n")
 		message.SendMessage(mess.SimpleString(), conn)
+		tes <- time.Now().UnixNano()
+		delayId += 1
+	}
+}
+
+func delayResponceReceiver(){
+	conn, err := net.ListenPacket("udp", ":6668") // listen on port
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	buf := make([]byte, 1024)
+	for {
+		n, addr, err := conn.ReadFrom(buf) // n, _, addr, err := p.ReadFrom(buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
+		for s.Scan() {
+			mess := message.CreateMessage(s.Text())
+			fmt.Printf("%s received from %v\n", mess, addr)
+			switch mess.Genre{
+				case constantes.DELAY_RESPONSE:{
+					fmt.Printf("DELAY_RESPONSE\n")
+					if delayId == mess.Id{
+						delay = (mess.Temps - <-tes) / 2
+						fmt.Printf("delais de %d nano secondes\n", delay)
+					}else{
+						fmt.Printf("Ids don't match")
+					}
+				}
+			}
+		}
 	}
 }
 

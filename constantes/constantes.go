@@ -3,7 +3,8 @@ package constantes
 import "time"
 
 const MulticastAddr = "224.0.0.1:6666"
-const ListeningPort = ":6667"
+const ListeningServerPort = ":6667"
+const ListeningClientPort = ":6668"
 
 const AttenteK time.Duration = 3
 const Min int = 4

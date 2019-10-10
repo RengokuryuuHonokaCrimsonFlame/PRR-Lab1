@@ -8,12 +8,11 @@ import (
 	"log"
 	"net"
 	"os"
-	"runtime"
+	"strings"
 	"time"
 
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/constantes"
 	"github.com/RengokuryuuHonokaCrimsonFlame/PRR-Lab1/message"
-	"golang.org/x/net/ipv4"
 )
 
 // debut, OMIT
@@ -29,6 +28,8 @@ func main() {
 	mustCopy(conn, os.Stdin)
 }
 
+// milieu, OMIT
+
 //Envoie les message SYNC et FOLLOW_UP sur l'adresse multicast (en boucle)
 func multicastSender() {
 	conn, err := net.Dial("udp", constantes.MulticastAddr) // listen on port
@@ -36,8 +37,7 @@ func multicastSender() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	var id uint8
-	id = 0
+	var id uint8 = 0
 	for {
 		sync := message.Message{
 			Genre: constantes.SYNC,
@@ -45,12 +45,14 @@ func multicastSender() {
 		}
 		tmaster := time.Now().UnixNano()
 		message.SendMessage(sync.SimpleString(), conn)
+		//fmt.Printf("Send SYNC\n")
 		follow_up := message.Message{
 			Genre: constantes.FOLLOW_UP,
 			Id:    id,
 			Temps: tmaster,
 		}
 		message.SendMessage(follow_up.String(), conn)
+		//fmt.Printf("Send FOLLOW_UP\n")
 		id++
 		time.Sleep(constantes.AttenteK * time.Second)
 	}
@@ -62,69 +64,44 @@ func selfListener() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	p := ipv4.NewPacketConn(conn) // convert to ipv4 packetConn
-	addr, err := net.ResolveUDPAddr("udp", constantes.MulticastAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var interf *net.Interface
-	if runtime.GOOS == "darwin" {
-		interf, _ = net.InterfaceByName("en0")
-	}
-
-	if err = p.JoinGroup(interf, addr); err != nil { // listen on ip multicast
-		log.Fatal(err)
-	}
 	buf := make([]byte, 1024)
 	for {
 		n, addr, err := conn.ReadFrom(buf) // n, _, addr, err := p.ReadFrom(buf)
 		if err != nil {
+			fmt.Printf("ICI")
 			log.Fatal(err)
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
+		fmt.Printf("%s received from %v\n", s.Text(), addr)
 		for s.Scan() {
 			mess := message.CreateMessage(s.Text())
 			fmt.Printf("%s received from %v\n", s.Text(), addr)
 			switch mess.Genre {
 				case constantes.DELAY_REQUEST:{
-
+					fmt.Printf("DELAY_REQUEST\n")
+					go delayResponseSender(mess.Id, addr.String())
+				}
+				default:{
+					fmt.Printf("Unknown operation has been received.\n")
 				}
 			}
 		}
 	}
 }
 
-// milieu, OMIT
-func clientReader() {
-	conn, err := net.ListenPacket("udp", constantes.MulticastAddr) // listen on port
+func delayResponseSender(id uint8, addr string){
+	delayRequest := message.Message{
+		Genre: constantes.DELAY_RESPONSE,
+		Id:    id,
+		Temps:  time.Now().UnixNano(),
+	}
+	conn, err := net.Dial("udp", strings.Split(addr, ":")[0] + ":6668") // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	p := ipv4.NewPacketConn(conn) // convert to ipv4 packetConn
-	addr, err := net.ResolveUDPAddr("udp", constantes.MulticastAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var interf *net.Interface
-	if runtime.GOOS == "darwin" {
-		interf, _ = net.InterfaceByName("en0")
-	}
-
-	if err = p.JoinGroup(interf, addr); err != nil { // listen on ip multicast
-		log.Fatal(err)
-	}
-	buf := make([]byte, 1024)
-	for {
-		n, addr, err := conn.ReadFrom(buf) // n, _, addr, err := p.ReadFrom(buf)
-		if err != nil {
-			log.Fatal(err)
-		}
-		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
-		for s.Scan() {
-			fmt.Printf("%s from %v\n", s.Text(), addr)
-		}
-	}
+	message.SendMessage(delayRequest.String(), conn)
+	fmt.Printf("Send DELAY_RESPONSE\n")
 }
 
 // fin, OMIT
