@@ -19,5 +19,5 @@ const DELAY_REQUEST uint8 = 2
 const DELAY_RESPONSE uint8 = 3
 
 //Paramétrage pour simulation
-const DeriveHorloge int8 = 0
-const DelaisTransmission int8 = 0
+const DeriveHorloge time.Duration = 0
+const DelaisTransmission time.Duration = 0
