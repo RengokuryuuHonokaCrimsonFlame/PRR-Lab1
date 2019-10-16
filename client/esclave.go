@@ -34,7 +34,7 @@ var mutexTes sync.Mutex
 
 func main() {
 	go udpReader()
-	go delayResponceReceiver()
+	go delayResponseReceiver()
 	conn, err := net.Dial("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
@@ -44,7 +44,7 @@ func main() {
 }
 
 // milieu, OMIT
-//On écoute sur l'adresse multicast
+//Écoute sur l'adresse multicast
 func udpReader() {
 	//Connexion
 	conn, err := net.ListenPacket("udp", constantes.MulticastAddr) // listen on port
@@ -52,11 +52,13 @@ func udpReader() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+	
 	p := ipv4.NewPacketConn(conn) // convert to ipv4 packetConn
 	addr, err := net.ResolveUDPAddr("udp", constantes.MulticastAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	
 	var interf *net.Interface
 	if runtime.GOOS == "darwin" {
 		interf, _ = net.InterfaceByName("en0")
@@ -66,6 +68,7 @@ func udpReader() {
 		log.Fatal(err)
 	}
 	buf := make([]byte, 1024)
+	
 	//Ecoute infinie
 	for {
 		n, addr, err := conn.ReadFrom(buf) // n, _, addr, err := p.ReadFrom(buf)
@@ -73,7 +76,8 @@ func udpReader() {
 			log.Fatal(err)
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
-		//On lit ce qu'on obtient
+		
+		//Lit ce qui a été reçu
 		for s.Scan() {
 			mess := message.CreateMessage(s.Text())
 			fmt.Printf( "%s received from %v %s\n", mess, addr, time.Now())
@@ -81,7 +85,7 @@ func udpReader() {
 			if mess.Id < syncId { //Si l'on reçoit des anciens message
 				mutexSync.Unlock()
 				fmt.Printf( "Ancien message reçu.\n")
-			}else{
+			} else {
 				mutexSync.Unlock()
 				switch mess.Genre { //Si l'on reçoit des message valide
 				case constantes.SYNC:{
@@ -90,6 +94,7 @@ func udpReader() {
 						syncId = mess.Id
 						mutexSync.Unlock()
 						mutexAddrServer.Lock()
+						
 						// Lors du premier SYNC on lance la fonction delayRequestSender
 						if addrServer != addr.String(){
 							addrServer = addr.String()
@@ -112,19 +117,21 @@ func udpReader() {
 	}
 }
 
-//On envoie une réponse au serveur
+//Envoie une réponse au serveur
 func delayRequestSender(addr string){
-	//On boucle tant que l'adresse du serveur est la même (au cas où l'on changerait de serveur)
+	//Boucle tant que l'adresse du serveur est la même (au cas où l'on changerait de serveur)
 	for getAddrServer() == addr {
 		rand.Seed(time.Now().UnixNano())
 		r := constantes.Min//rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min //Attente aléatoire
 		time.Sleep(time.Duration(r) * time.Second)
+		
 		//Connexion au serveur
 		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningServerPort)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer conn.Close()
+		
 		//Incrément de l'ID et envoi de la requête
 		mutexDelayId.Lock()
 		delayId += 1
@@ -141,14 +148,15 @@ func delayRequestSender(addr string){
 	}
 }
 
-//On reçoit la réponse du serveur
-func delayResponceReceiver(){
+//Reçoit la réponse du serveur
+func delayResponseReceiver(){
 	//On écoute sur soi
 	conn, err := net.ListenPacket("udp", constantes.ListeningClientPort) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+	
 	buf := make([]byte, 1024)
 	//Ecoute infinie
 	for {
@@ -157,6 +165,7 @@ func delayResponceReceiver(){
 			log.Fatal(err)
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
+		
 		//Pour chaque message reçu
 		for s.Scan() {
 			mess := message.CreateMessage(s.Text())
@@ -165,6 +174,7 @@ func delayResponceReceiver(){
 				case constantes.DELAY_RESPONSE:{
 					fmt.Printf("Type DELAY_RESPONSE\n")
 					mutexDelayId.Lock()
+					
 					if delayId == mess.Id{ //On s'assure que l'id reçu corresponde à l'id attendu
 						mutexDelayId.Unlock()
 						mutexDelay.Lock()

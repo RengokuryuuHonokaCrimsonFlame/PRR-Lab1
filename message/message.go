@@ -19,19 +19,18 @@ func (m Message) String() string{
 	return fmt.Sprintf("%v %v %v", m.Genre, m.Id, m.Temps)
 }
 
-//Envoie un message sans temps
+//Envoie un message sans l'attribut de temps
 func (m Message) SimpleString() string{
 	return fmt.Sprintf("%v %v", m.Genre, m.Id)
 }
 
-//Recrée le message a partir d'une string
+//Recrée le message à partir d'une string
 func CreateMessage(s string) *Message{
 	decompose := strings.Split(s, " ")
 	genre, _ := strconv.ParseUint(decompose[0], 10, 8)
-
 	id, _ := strconv.ParseUint(decompose[1], 10, 8)
-
 	t := time.Now().UnixNano()
+	
 	if len(decompose) > 2 {
 		t, _ = strconv.ParseInt(decompose[2], 10, 64)
 	}
@@ -44,7 +43,7 @@ func CreateMessage(s string) *Message{
 	return &mess
 }
 
-//Pour envoyer un message
+//Envoie un message
 func SendMessage(message string, conn io.Writer){
 	conn.Write([]byte(message))
 }
