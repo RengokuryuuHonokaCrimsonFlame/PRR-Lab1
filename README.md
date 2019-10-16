@@ -3,6 +3,8 @@ Crüll Loris, Rod Julien
 
 ## Lancement du programme
 Tout d'abord, exécuter le fichier maitre.go pour démarrer un maître, puis exécuter le fichier esclave.go pour démarrer un esclave.
+Il est possible qu'il soit nécessaire d'importer les classes constantes et message dans les classes esclave et maitre.
+Pour cela, il suffit de cliquer sur les lignes correspondantes (github), alt + Enter et de sélectionner la première option proposée.
 
 ## constantes.go
 Ce fichier contient toutes les constantes utilisées par le programme.
