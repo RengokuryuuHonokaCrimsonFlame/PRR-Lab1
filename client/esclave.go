@@ -188,6 +188,9 @@ func delayResponseReceiver(){
 						fmt.Printf("Ids don't match %d vs %d\n", mess.Id, delayId)
 					}
 				}
+				default:{
+					fmt.Printf("Unknown operation has been received.")
+				}
 			}
 		}
 	}
