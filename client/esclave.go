@@ -13,18 +13,24 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 	"golang.org/x/net/ipv4"
 )
 
 // debut, OMIT
-
 var syncId uint8 = 0
 var ecart int64 = 0
-var addrServer string = ""
+var addrServer = ""
 var delayId uint8 = 0
 var delay int64 = 0
-var tes = make(chan int64)
+var tes int64 = 0
+var mutexSync sync.Mutex
+var mutexEcart sync.Mutex
+var mutexAddrServer sync.Mutex
+var mutexDelayId sync.Mutex
+var mutexDelay sync.Mutex
+var mutexTes sync.Mutex
 
 func main() {
 	go udpReader()
@@ -40,6 +46,7 @@ func main() {
 // milieu, OMIT
 //On écoute sur l'adresse multicast
 func udpReader() {
+	//Connexion
 	conn, err := net.ListenPacket("udp", constantes.MulticastAddr) // listen on port
 	if err != nil {
 		log.Fatal(err)
@@ -59,30 +66,42 @@ func udpReader() {
 		log.Fatal(err)
 	}
 	buf := make([]byte, 1024)
+	//Ecoute infinie
 	for {
 		n, addr, err := conn.ReadFrom(buf) // n, _, addr, err := p.ReadFrom(buf)
 		if err != nil {
 			log.Fatal(err)
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
+		//On lit ce qu'on obtient
 		for s.Scan() {
 			mess := message.CreateMessage(s.Text())
-			fmt.Printf( "%s received from %v\n", mess, addr)
-			if mess.Id < syncId {
+			fmt.Printf( "%s received from %v %s\n", mess, addr, time.Now())
+			mutexSync.Lock()
+			if mess.Id < syncId { //Si l'on reçoit des anciens message
+				mutexSync.Unlock()
 				fmt.Printf( "Ancien message reçu.\n")
 			}else{
-				switch mess.Genre {
+				mutexSync.Unlock()
+				switch mess.Genre { //Si l'on reçoit des message valide
 				case constantes.SYNC:{
-						fmt.Printf("SYNC\n")
+						fmt.Printf("Type SYNC\n")
+						mutexSync.Lock()
 						syncId = mess.Id
+						mutexSync.Unlock()
+						mutexAddrServer.Lock()
+						// Lors du premier SYNC on lance la fonction delayRequestSender
 						if addrServer != addr.String(){
 							addrServer = addr.String()
 							go delayRequestSender(addr.String())
 						}
+						mutexAddrServer.Unlock()
 					}
 					case constantes.FOLLOW_UP:{
+						mutexEcart.Lock()
 						ecart = time.Now().UnixNano() - mess.Temps
-						fmt.Printf("FOLLOW_UP écart de %d nano secondes\n", ecart)
+						fmt.Printf("Type FOLLOW_UP écart de %d nano secondes\n", ecart)
+						mutexEcart.Unlock()
 					}
 					default:{
 						fmt.Printf("Unknown operation has been received.")
@@ -95,55 +114,81 @@ func udpReader() {
 
 //On envoie une réponse au serveur
 func delayRequestSender(addr string){
-	for addrServer == addr {
+	//On boucle tant que l'adresse du serveur est la même (au cas où l'on changerait de serveur)
+	for getAddrServer() == addr {
 		rand.Seed(time.Now().UnixNano())
-		r := constantes.Min//rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min
+		r := constantes.Min//rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min //Attente aléatoire
 		time.Sleep(time.Duration(r) * time.Second)
+		//Connexion au serveur
 		conn, err := net.Dial("udp", strings.Split(addr, ":")[0]+constantes.ListeningServerPort)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer conn.Close()
+		//Incrément de l'ID et envoi de la requête
+		mutexDelayId.Lock()
+		delayId += 1
 		mess := message.Message{
 			Genre: constantes.DELAY_REQUEST,
 			Id:    delayId,
 		}
-		fmt.Println("Send DELAY_REQUEST\n")
+		mutexDelayId.Unlock()
+		fmt.Printf("Send DELAY_REQUEST %s\n", time.Now())
 		message.SendMessage(mess.SimpleString(), conn)
-		tes <- time.Now().UnixNano()
-		delayId += 1
+		mutexTes.Lock()
+		tes = time.Now().UnixNano()
+		mutexTes.Unlock()
 	}
 }
 
+//On reçoit la réponse du serveur
 func delayResponceReceiver(){
+	//On écoute sur soi
 	conn, err := net.ListenPacket("udp", constantes.ListeningClientPort) // listen on port
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 	buf := make([]byte, 1024)
+	//Ecoute infinie
 	for {
 		n, addr, err := conn.ReadFrom(buf) // n, _, addr, err := p.ReadFrom(buf)
 		if err != nil {
 			log.Fatal(err)
 		}
 		s := bufio.NewScanner(bytes.NewReader(buf[0:n]))
+		//Pour chaque message reçu
 		for s.Scan() {
 			mess := message.CreateMessage(s.Text())
-			fmt.Printf("%s received from %v\n", mess, addr)
+			fmt.Printf("%s received from %v %s\n", mess, addr, time.Now())
 			switch mess.Genre{
 				case constantes.DELAY_RESPONSE:{
-					fmt.Printf("DELAY_RESPONSE\n")
-					if delayId == mess.Id{
-						delay = (mess.Temps - <-tes) / 2
+					fmt.Printf("Type DELAY_RESPONSE\n")
+					mutexDelayId.Lock()
+					if delayId == mess.Id{ //On s'assure que l'id reçu corresponde à l'id attendu
+						mutexDelayId.Unlock()
+						mutexDelay.Lock()
+						mutexTes.Lock()
+						delay = (mess.Temps - tes) / 2
+						mutexTes.Unlock()
 						fmt.Printf("delais de %d nano secondes\n", delay)
+						mutexDelay.Unlock()
 					}else{
-						fmt.Printf("Ids don't match")
+						mutexDelayId.Unlock()
+						fmt.Printf("Ids don't match %d vs %d\n", mess.Id, delayId)
 					}
 				}
 			}
 		}
 	}
+}
+
+//Retourne l'adresse du serveur actuel
+func getAddrServer() string{
+	mutexAddrServer.Lock()
+	result := addrServer
+	mutexAddrServer.Unlock()
+	return result
 }
 
 // fin, OMIT
