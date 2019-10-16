@@ -48,6 +48,7 @@ func multicastSender() {
 			Id:    id,
 		}
 		tmaster := time.Now().UnixNano()
+		time.Sleep(constantes.DelaisTransmission * time.Second) // Simulation de delais
 		message.SendMessage(sync.SimpleString(), conn)
 		fmt.Printf("Send SYNC %s\n", time.Now())
 		
@@ -57,6 +58,7 @@ func multicastSender() {
 			Id:    id,
 			Temps: tmaster,
 		}
+		time.Sleep(constantes.DelaisTransmission * time.Second) // Simulation de delais
 		message.SendMessage(follow_up.String(), conn)
 		fmt.Printf("Send FOLLOW_UP %s\n", time.Now())
 		id++
@@ -114,6 +116,7 @@ func delayResponseSender(id uint8, addr string){
 		Id:    id,
 		Temps:  time.Now().UnixNano(),
 	}
+	time.Sleep(constantes.DelaisTransmission * time.Second) // Simulation de delais
 	message.SendMessage(delayRequest.String(), conn)
 	fmt.Printf("Send DELAY_RESPONSE %s\n", time.Now())
 }

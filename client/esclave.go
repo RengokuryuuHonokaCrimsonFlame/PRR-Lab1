@@ -104,7 +104,7 @@ func udpReader() {
 					}
 					case constantes.FOLLOW_UP:{
 						mutexEcart.Lock()
-						ecart = time.Now().UnixNano() - mess.Temps
+						ecart = time.Now().UnixNano() - mess.Temps - int64(constantes.DeriveHorloge); // Simulation de dérive
 						fmt.Printf("Type FOLLOW_UP écart de %d nano secondes\n", ecart)
 						mutexEcart.Unlock()
 					}
@@ -122,7 +122,7 @@ func delayRequestSender(addr string){
 	//Boucle tant que l'adresse du serveur est la même (au cas où l'on changerait de serveur)
 	for getAddrServer() == addr {
 		rand.Seed(time.Now().UnixNano())
-		r := constantes.Min//rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min //Attente aléatoire
+		r := rand.Intn(constantes.Max - constantes.Min + 1) +  constantes.Min //Attente aléatoire
 		time.Sleep(time.Duration(r) * time.Second)
 		
 		//Connexion au serveur
@@ -140,10 +140,11 @@ func delayRequestSender(addr string){
 			Id:    delayId,
 		}
 		mutexDelayId.Unlock()
+		time.Sleep(constantes.DelaisTransmission * time.Second) // Simulation de delais
 		fmt.Printf("Send DELAY_REQUEST %s\n", time.Now())
 		message.SendMessage(mess.SimpleString(), conn)
 		mutexTes.Lock()
-		tes = time.Now().UnixNano()
+		tes = time.Now().UnixNano() - int64(constantes.DeriveHorloge); // Simulation de dérive
 		mutexTes.Unlock()
 	}
 }
